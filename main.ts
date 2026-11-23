@@ -31,6 +31,7 @@ const SYMBOL = 'CBBTC';
 const SMA_N = 60;
 const EMA_N = 21;
 const DIP_BPS = 30;
+const CRASH_BPS = 500; // dip this far below EMA(21) is a crash, not a pullback
 const TP_BPS = 300;
 const SL_BPS = 60;
 const LATE_SEQ = 1380;
@@ -84,6 +85,9 @@ await runBars({
       // Dip: close at least DIP_BPS below EMA(21).
       // close <= ema * (10000 - DIP) / 10000, in integers.
       if (close * 10_000n * EMA_SCALE > emaScaled * BigInt(10_000 - DIP_BPS)) return [];
+      // Crash guard: a dip far below EMA(21) is a crash, not a pullback.
+      // close < ema * (10000 - CRASH_BPS) / 10000, in integers.
+      if (close * 10_000n * EMA_SCALE < emaScaled * BigInt(10_000 - CRASH_BPS)) return [];
       if (state.cash < 1_000_000n) return [];
       entryClose = close;
       return [
